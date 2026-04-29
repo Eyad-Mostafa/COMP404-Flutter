@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../leaderboard/presentation/screens/leaderboard_screen.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/app_text_field.dart';
@@ -25,18 +26,21 @@ class LoginScreen extends StatelessWidget {
         body: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
             if (state is AuthSuccessMessage) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
 
-              // 🔥 هنا بعد اللوجين تقدري تعملي navigation
-              // Navigator.pushReplacement(...)
+              // Navigate to Leaderboard after successful login
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
+              );
             }
 
             if (state is AuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.error)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.error)));
             }
           },
 
@@ -90,16 +94,16 @@ class LoginScreen extends StatelessWidget {
                     state is AuthLoading
                         ? const Center(child: CircularProgressIndicator())
                         : ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          cubit.login(
-                            emailController.text,
-                            passwordController.text,
-                          );
-                        }
-                      },
-                      child: const Text("Login"),
-                    ),
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                cubit.login(
+                                  emailController.text,
+                                  passwordController.text,
+                                );
+                              }
+                            },
+                            child: const Text("Login"),
+                          ),
                   ],
                 ),
               ),
