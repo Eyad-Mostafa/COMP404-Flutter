@@ -3,10 +3,6 @@ import '../../data/dummy_data.dart';
 import '../../data/models/user_model.dart';
 import '../widgets/leaderboard_item.dart';
 
-/// A modern, animated leaderboard screen.
-///
-/// Displays users sorted by score with special medal styling for the Top 3,
-/// highlights the current user, and auto-scrolls to their position.
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
 
