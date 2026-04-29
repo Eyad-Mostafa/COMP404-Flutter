@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models/user_model.dart';
 
-/// A reusable leaderboard row widget.
-///
-/// Displays rank, avatar, name, and score.
-/// Special medal styling for Top 3, and highlight for the current user.
 class LeaderboardItem extends StatelessWidget {
   final LeaderboardUserModel user;
   final int rank;
