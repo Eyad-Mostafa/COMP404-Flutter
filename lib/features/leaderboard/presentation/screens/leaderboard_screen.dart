@@ -1,149 +1,79 @@
 import 'package:flutter/material.dart';
-import '../../data/dummy_data.dart';
-import '../../data/models/user_model.dart';
-import '../widgets/leaderboard_item.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// A modern, animated leaderboard screen.
+import '../../../../core/di/service_locator.dart';
+import '../../data/models/user_model.dart';
+import '../cubit/leaderboard_cubit.dart';
+import '../cubit/leaderboard_state.dart';
+
+/// A clean leaderboard screen that displays **only** API data.
 ///
-/// Displays users sorted by score with special medal styling for the Top 3,
-/// highlights the current user, and auto-scrolls to their position.
-class LeaderboardScreen extends StatefulWidget {
+/// Fetches users via [LeaderboardCubit] from `POST /score/leaderboard`.
+/// Each entry shows **name** and **score** exactly as returned by the backend.
+class LeaderboardScreen extends StatelessWidget {
   const LeaderboardScreen({super.key});
 
   @override
-  State<LeaderboardScreen> createState() => _LeaderboardScreenState();
-}
-
-class _LeaderboardScreenState extends State<LeaderboardScreen>
-    with TickerProviderStateMixin {
-  late final List<LeaderboardUserModel> _sortedUsers;
-  late final ScrollController _scrollController;
-  final List<AnimationController> _animControllers = [];
-  final List<Animation<double>> _animations = [];
-
-  int _currentUserIndex = -1;
-
-  // ─── Lifecycle ───────────────────────────────────────────────────
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Sort descending by score.
-    _sortedUsers = List.of(dummyLeaderboardUsers)
-      ..sort((a, b) => b.score.compareTo(a.score));
-
-    _scrollController = ScrollController();
-
-    // Find the current user index.
-    _currentUserIndex =
-        _sortedUsers.indexWhere((u) => u.id == currentUserId);
-
-    // Create staggered animations for each item.
-    for (int i = 0; i < _sortedUsers.length; i++) {
-      final controller = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 500),
-      );
-      _animControllers.add(controller);
-      _animations.add(CurvedAnimation(
-        parent: controller,
-        curve: Curves.easeOutCubic,
-      ));
-    }
-
-    // Trigger staggered entrance.
-    _playStaggeredAnimation();
-  }
-
-  Future<void> _playStaggeredAnimation() async {
-    for (int i = 0; i < _animControllers.length; i++) {
-      // Wait a tiny stagger between items.
-      await Future.delayed(const Duration(milliseconds: 60));
-      if (!mounted) return;
-      _animControllers[i].forward();
-    }
-
-    // After all items animate in, scroll to current user if needed.
-    if (_currentUserIndex > 4) {
-      await Future.delayed(const Duration(milliseconds: 300));
-      if (!mounted) return;
-      _scrollToCurrentUser();
-    }
-  }
-
-  void _scrollToCurrentUser() {
-    if (_currentUserIndex < 0) return;
-
-    // Approximate item height (card ≈ 76 + vertical margin 10).
-    const itemExtent = 86.0;
-    // Header occupies ~280 px.
-    const headerOffset = 280.0;
-
-    final targetOffset = headerOffset +
-        (_currentUserIndex * itemExtent) -
-        (MediaQuery.of(context).size.height / 2 - itemExtent);
-
-    _scrollController.animateTo(
-      targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 800),
-      curve: Curves.easeInOutCubic,
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<LeaderboardCubit>()..fetchLeaderboard(),
+      child: const _LeaderboardView(),
     );
   }
+}
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    for (final c in _animControllers) {
-      c.dispose();
-    }
-    super.dispose();
-  }
+// ─────────────────────────────────────────────────────────────────────────────
+// Inner view — has access to the Cubit via context
+// ─────────────────────────────────────────────────────────────────────────────
 
-  // ─── Build ───────────────────────────────────────────────────────
+class _LeaderboardView extends StatelessWidget {
+  const _LeaderboardView();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F1E),
       body: CustomScrollView(
-        controller: _scrollController,
         physics: const BouncingScrollPhysics(),
         slivers: [
           // ── App Bar ──
-          _buildSliverAppBar(),
+          _buildSliverAppBar(context),
 
-          // ── Top‑3 podium header ──
-          SliverToBoxAdapter(child: _buildPodiumHeader()),
+          // ── Content ──
+          BlocBuilder<LeaderboardCubit, LeaderboardState>(
+            builder: (context, state) {
+              if (state is LeaderboardLoading || state is LeaderboardInitial) {
+                return const SliverFillRemaining(
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF6C63FF),
+                    ),
+                  ),
+                );
+              }
 
-          // ── List ──
-          SliverPadding(
-            padding: const EdgeInsets.only(top: 8, bottom: 32),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final user = _sortedUsers[index];
-                  final rank = index + 1;
+              if (state is LeaderboardError) {
+                return _buildErrorSliver(context, state.error);
+              }
 
-                  return LeaderboardItem(
-                    user: user,
-                    rank: rank,
-                    isCurrentUser: user.id == currentUserId,
-                    animation: _animations[index],
-                  );
-                },
-                childCount: _sortedUsers.length,
-              ),
-            ),
+              if (state is LeaderboardSuccess) {
+                if (state.users.isEmpty) {
+                  return _buildEmptySliver();
+                }
+                return _buildListSliver(state.users);
+              }
+
+              return const SliverToBoxAdapter(child: SizedBox.shrink());
+            },
           ),
         ],
       ),
     );
   }
 
-  // ─── Sliver App Bar ──────────────────────────────────────────────
+  // ─── App Bar ──────────────────────────────────────────────────────
 
-  Widget _buildSliverAppBar() {
+  Widget _buildSliverAppBar(BuildContext context) {
     return SliverAppBar(
       pinned: true,
       expandedHeight: 60,
@@ -164,192 +94,181 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           letterSpacing: 0.5,
         ),
       ),
-      actions: [
-        if (_currentUserIndex >= 0)
-          IconButton(
-            icon: const Icon(Icons.my_location_rounded,
-                color: Color(0xFF6C63FF), size: 22),
-            tooltip: 'Go to my rank',
-            onPressed: _scrollToCurrentUser,
-          ),
-      ],
     );
   }
 
-  // ─── Podium Header (Top 3) ──────────────────────────────────────
+  // ─── Error ────────────────────────────────────────────────────────
 
-  Widget _buildPodiumHeader() {
-    if (_sortedUsers.length < 3) return const SizedBox.shrink();
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // ── 2nd place ──
-          _buildPodiumUser(
-            user: _sortedUsers[1],
-            rank: 2,
-            height: 90,
-            avatarRadius: 28,
-            medalColor: const Color(0xFFC0C0C0),
+  Widget _buildErrorSliver(BuildContext context, String error) {
+    return SliverFillRemaining(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline_rounded,
+                  color: Colors.redAccent, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load leaderboard',
+                style: TextStyle(
+                  color: Colors.white.withAlpha(200),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error,
+                style: TextStyle(
+                  color: Colors.white.withAlpha(120),
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () =>
+                    context.read<LeaderboardCubit>().fetchLeaderboard(),
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6C63FF),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-
-          // ── 1st place (tallest) ──
-          _buildPodiumUser(
-            user: _sortedUsers[0],
-            rank: 1,
-            height: 120,
-            avatarRadius: 36,
-            medalColor: const Color(0xFFFFD700),
-          ),
-          const SizedBox(width: 12),
-
-          // ── 3rd place ──
-          _buildPodiumUser(
-            user: _sortedUsers[2],
-            rank: 3,
-            height: 75,
-            avatarRadius: 26,
-            medalColor: const Color(0xFFCD7F32),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildPodiumUser({
-    required LeaderboardUserModel user,
-    required int rank,
-    required double height,
-    required double avatarRadius,
-    required Color medalColor,
-  }) {
-    final isMe = user.id == currentUserId;
+  // ─── Empty ────────────────────────────────────────────────────────
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // ── Crown for #1 ──
-        if (rank == 1)
-          const Padding(
-            padding: EdgeInsets.only(bottom: 4),
-            child: Icon(Icons.auto_awesome, color: Color(0xFFFFD700), size: 24),
-          ),
-
-        // ── Avatar stack ──
-        Stack(
-          alignment: Alignment.bottomCenter,
-          clipBehavior: Clip.none,
+  Widget _buildEmptySliver() {
+    return SliverFillRemaining(
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: medalColor, width: 3),
-                boxShadow: [
-                  BoxShadow(
-                    color: medalColor.withAlpha(80),
-                    blurRadius: 14,
-                    spreadRadius: 2,
-                  ),
-                  if (isMe)
-                    BoxShadow(
-                      color: const Color(0xFF6C63FF).withAlpha(60),
-                      blurRadius: 18,
-                      spreadRadius: 4,
-                    ),
-                ],
-              ),
-              child: CircleAvatar(
-                radius: avatarRadius,
-                backgroundColor: Colors.grey.shade800,
-                backgroundImage: NetworkImage(user.avatarUrl),
+            Icon(Icons.leaderboard_outlined,
+                color: Colors.white.withAlpha(80), size: 56),
+            const SizedBox(height: 16),
+            Text(
+              'No leaderboard data yet',
+              style: TextStyle(
+                color: Colors.white.withAlpha(160),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            // Medal chip
-            Positioned(
-              bottom: -8,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: medalColor,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: medalColor.withAlpha(120),
-                      blurRadius: 6,
-                    ),
-                  ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── List ─────────────────────────────────────────────────────────
+
+  Widget _buildListSliver(List<LeaderboardUserModel> users) {
+    return SliverPadding(
+      padding: const EdgeInsets.only(top: 8, bottom: 32),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final user = users[index];
+            final rank = index + 1;
+
+            return _LeaderboardRow(user: user, rank: rank);
+          },
+          childCount: users.length,
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Single leaderboard row — shows only rank (from position), name, and score
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _LeaderboardRow extends StatelessWidget {
+  final LeaderboardUserModel user;
+  final int rank;
+
+  const _LeaderboardRow({required this.user, required this.rank});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E2C),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(40),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            // ── Rank (derived from backend ordering) ──
+            SizedBox(
+              width: 36,
+              child: Text(
+                '#$rank',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.grey.shade500,
                 ),
-                child: Text(
-                  '#$rank',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
+              ),
+            ),
+            const SizedBox(width: 14),
+
+            // ── Name (from API) ──
+            Expanded(
+              child: Text(
+                user.name,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+
+            // ── Score (from API) ──
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: const Color(0xFFF0F0F5),
+              ),
+              child: Text(
+                '${user.score}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF555570),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 14),
-
-        // ── Name ──
-        SizedBox(
-          width: 80,
-          child: Text(
-            user.name,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: isMe ? const Color(0xFF6C63FF) : Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-
-        // ── Score ──
-        Text(
-          '${user.score}',
-          style: TextStyle(
-            color: medalColor,
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // ── Pedestal bar ──
-        Container(
-          width: 80,
-          height: height,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                medalColor.withAlpha(60),
-                medalColor.withAlpha(20),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(12),
-            ),
-            border: Border(
-              top: BorderSide(color: medalColor.withAlpha(120), width: 2),
-              left: BorderSide(color: medalColor.withAlpha(50), width: 1),
-              right: BorderSide(color: medalColor.withAlpha(50), width: 1),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

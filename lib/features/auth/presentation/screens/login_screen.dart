@@ -33,7 +33,9 @@ class LoginScreen extends StatelessWidget {
               // Navigate to Leaderboard after successful login
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const LeaderboardScreen(),
+                ),
               );
             }
 
