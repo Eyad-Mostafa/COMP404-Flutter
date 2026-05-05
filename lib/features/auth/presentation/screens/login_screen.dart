@@ -21,7 +21,12 @@ class LoginScreen extends StatelessWidget {
     return BlocProvider(
       create: (_) => sl<AuthCubit>(),
       child: Scaffold(
-        appBar: AppBar(title: const Text("Login")),
+        backgroundColor: const Color(0xFF0F0F1E),
+
+        appBar: AppBar(
+            backgroundColor: const Color(0xFF0F0F1E),
+            iconTheme: IconThemeData(color: Colors.white),
+            title: const Text("Login", style: TextStyle(color: Colors.white))),
 
         body: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
@@ -63,6 +68,7 @@ class LoginScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white
                       ),
                     ),
 
@@ -70,7 +76,7 @@ class LoginScreen extends StatelessWidget {
 
                     const Text(
                       "Login to continue",
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
 
                     const SizedBox(height: 30),

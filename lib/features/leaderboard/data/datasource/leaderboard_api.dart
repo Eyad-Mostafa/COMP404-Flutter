@@ -6,11 +6,10 @@ class LeaderboardApi {
 
   LeaderboardApi(this.apiService);
 
-  /// Calls POST /score/leaderboard to fetch the leaderboard data.
+  /// Calls GET /score/leaderboard to fetch the leaderboard data.
   Future<LeaderboardResponse> fetchLeaderboard({int count = 10}) async {
-    final response = await apiService.dio.post(
+    final response = await apiService.dio.get(
       'score/leaderboard',
-      data: {'count': count},
     );
     return LeaderboardResponse.fromJson(response.data);
   }

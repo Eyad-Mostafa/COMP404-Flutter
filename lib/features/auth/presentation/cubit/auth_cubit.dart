@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/repository/auth_repository.dart';
@@ -27,7 +28,12 @@ class AuthCubit extends Cubit<AuthState> {
 
       emit(AuthSuccessMessage(res.message));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      if (e is DioException) {
+        final message = e.response?.data['message'] ?? "Email already exits";
+        emit(AuthError(message));
+      } else {
+        emit(AuthError("Unexpected error"));
+      }
     }
   }
 ///Login user
@@ -38,7 +44,12 @@ class AuthCubit extends Cubit<AuthState> {
       final res = await repo.login(email, password);
       emit(AuthSuccessMessage(res.message));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      if (e is DioException) {
+        final message = e.response?.data['message'] ?? "No Register Email";
+        emit(AuthError(message));
+      } else {
+        emit(AuthError("Unexpected error"));
+      }
     }
   }
 

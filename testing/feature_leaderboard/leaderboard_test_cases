@@ -1,0 +1,63 @@
+Feature: Leaderboard
+  1. Functional Test Cases
+       TC-01: Fetch leaderboard successfully
+          Steps:
+              Open leaderboard screen
+              Wait for data to load
+          Expected Result:
+              List of users with scores is displayed
+          Status: PASS
+       TC-02: Display correct user data
+          Steps:
+              Open leaderboard
+              Check username and score
+          Expected Result:
+              Data matches backend response
+          Status: PASS
+       TC-03: Loading state
+          Steps:
+               Open leaderboard screen
+          Expected Result:
+               Loading indicator appears before data loads
+          Status: PASS
+ 2. Error Test Cases
+       TC-04: Network failure
+          Steps:
+               Turn off internet
+               Open leaderboard
+          Expected Result:
+               Error message appears
+          Status: PASS
+       TC-05: API failure
+          Steps:
+               Simulate server error
+               Fetch leaderboard
+          Expected Result:
+               Error state is shown
+          Status: PASS
+ 3. Edge Cases
+       TC-06: Empty leaderboard
+          Steps:
+              API returns empty list
+         Expected Result:
+              Empty state UI is shown (No users found)
+         Status: PASS
+       TC-07: Large number of users
+         Steps:
+              Fetch leaderboard with many users
+         Expected Result:
+              List scrolls correctly without UI issues
+         Status: PASS
+       TC-08: Data refresh
+         Steps:
+              Open leaderboard
+              Refresh screen (reload)
+         Expected Result:
+               Updated data is displayed
+         Status: PASS
+Notes
+  * Data is fetched from backend using API
+  * No frontend sorting applied (data comes sorted from server)
+  * Errors handled using LeaderboardError state
+  * Success handled using LeaderboardSuccess state
+  * Loading handled using LeaderboardLoading

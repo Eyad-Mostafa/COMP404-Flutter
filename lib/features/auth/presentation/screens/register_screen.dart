@@ -6,6 +6,7 @@ import '../../../../core/utils/validators.dart';
 import '../widgets/app_text_field.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends StatelessWidget {
   RegisterScreen({super.key});
@@ -22,13 +23,24 @@ class RegisterScreen extends StatelessWidget {
     return BlocProvider(
       create: (_) => sl<AuthCubit>(),
       child: Scaffold(
-        appBar: AppBar(title: const Text("Sign Up")),
+        backgroundColor: const Color(0xFF0F0F1E),
+
+        appBar: AppBar(
+            backgroundColor: const Color(0xFF0F0F1E),
+            iconTheme: IconThemeData(color: Colors.white),
+            title: const Text("Sign Up", style: TextStyle(color: Colors.white),)),
 
         body: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
             if (state is AuthSuccessMessage) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.message)),
+              );
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>  LoginScreen(),
+                ),
               );
             }
 
@@ -56,6 +68,7 @@ class RegisterScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
+                          color: Colors.white
                       ),
                     ),
 

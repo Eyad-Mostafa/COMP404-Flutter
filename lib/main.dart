@@ -4,6 +4,7 @@ import 'package:get/get_navigation/src/root/get_material_app.dart';
 
 import 'features/auth/presentation/screens/start_screen.dart';
 
+
 void main() {
   setup();
   runApp(const MyApp());

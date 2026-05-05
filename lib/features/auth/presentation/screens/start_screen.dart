@@ -14,6 +14,7 @@ class StartScreen extends StatelessWidget {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
+      backgroundColor: const Color(0xFF0F0F1E),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
         child: Column(
@@ -72,7 +73,7 @@ class StartScreen extends StatelessWidget {
       style: TextStyle(
         fontSize: size.width * 0.08,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF60269E),
+        color:Color(0xFF7F19A9),
       ),
     );
   }
@@ -83,6 +84,7 @@ class StartScreen extends StatelessWidget {
       textAlign: TextAlign.center,
       style: TextStyle(
         fontSize: size.width * 0.045,
+        color: Colors.white,
         height: 1.4,
       ),
     );
