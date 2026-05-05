@@ -11,18 +11,10 @@ class LeaderboardUserModel {
     required this.score,
   });
 
-  /// Factory constructor for JSON deserialization from backend.
   factory LeaderboardUserModel.fromJson(Map<String, dynamic> json) {
     return LeaderboardUserModel(
-      name: json['name'] as String? ?? '',
-      score: (json['score'] as num?)?.toInt() ?? 0,
+      name: json['name'] ?? '',
+      score: (json['score'] ?? 0) as int,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'score': score,
-    };
   }
 }

@@ -28,10 +28,10 @@ class AppButton extends StatelessWidget {
           ? OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          backgroundColor: Color(0xFF60269E),
+          backgroundColor: Color(0xFF7F19A9),
           foregroundColor: Colors.white,
           side: BorderSide(
-            color: borderColor ?? Color(0xFF60269E),
+            color: borderColor ?? Color(0xFF7F19A9),
           ),
         ),
         child: Text(text),
@@ -40,7 +40,7 @@ class AppButton extends StatelessWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? Colors.white,
-          foregroundColor: textColor ?? Color(0xFF60269E),
+          foregroundColor: textColor ?? Color(0xFF7F19A9),
         ),
         child: Text(text),
       ),

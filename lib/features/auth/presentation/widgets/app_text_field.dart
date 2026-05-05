@@ -22,6 +22,7 @@ class AppTextField extends StatelessWidget {
         controller: controller,
         obscureText: isPassword,
         validator: validator,
+        style: TextStyle( color: Colors.white),
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(

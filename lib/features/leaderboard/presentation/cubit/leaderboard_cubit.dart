@@ -12,11 +12,17 @@ class LeaderboardCubit extends Cubit<LeaderboardState> {
   /// The data is displayed exactly as received — no frontend sorting.
   void fetchLeaderboard({int count = 10}) async {
     emit(LeaderboardLoading());
- 
+
     try {
       final res = await repo.fetchLeaderboard(count: count);
+
+      print("LEADERBOARD DATA = ${res.data}");
+
       emit(LeaderboardSuccess(res.data));
-    } catch (e) {
+    } catch (e, stack) {
+      print("LEADERBOARD ERROR = $e");
+      print("STACKTRACE = $stack");
+
       emit(LeaderboardError(e.toString()));
     }
   }

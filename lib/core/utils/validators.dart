@@ -35,7 +35,7 @@ class Validators {
     final regex = RegExp(r"^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$");
 
     if (!regex.hasMatch(email)) {
-      return "Enter a valid email (example: name@email.com)";
+      return "Enter a valid email (example: name@gmail.com)";
     }
 
     return null;

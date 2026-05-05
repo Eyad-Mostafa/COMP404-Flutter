@@ -6,10 +6,8 @@ import '../../data/models/user_model.dart';
 import '../cubit/leaderboard_cubit.dart';
 import '../cubit/leaderboard_state.dart';
 
-/// A clean leaderboard screen that displays **only** API data.
-///
 /// Fetches users via [LeaderboardCubit] from `POST /score/leaderboard`.
-/// Each entry shows **name** and **score** exactly as returned by the backend.
+
 class LeaderboardScreen extends StatelessWidget {
   const LeaderboardScreen({super.key});
 
@@ -21,10 +19,6 @@ class LeaderboardScreen extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Inner view — has access to the Cubit via context
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _LeaderboardView extends StatelessWidget {
   const _LeaderboardView();
@@ -45,9 +39,7 @@ class _LeaderboardView extends StatelessWidget {
               if (state is LeaderboardLoading || state is LeaderboardInitial) {
                 return const SliverFillRemaining(
                   child: Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF6C63FF),
-                    ),
+                    child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
                   ),
                 );
               }
@@ -71,7 +63,7 @@ class _LeaderboardView extends StatelessWidget {
     );
   }
 
-  // ─── App Bar ──────────────────────────────────────────────────────
+  // App Bar
 
   Widget _buildSliverAppBar(BuildContext context) {
     return SliverAppBar(
@@ -81,8 +73,11 @@ class _LeaderboardView extends StatelessWidget {
       elevation: 0,
       centerTitle: true,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded,
-            color: Colors.white70, size: 20),
+        icon: const Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: Colors.white70,
+          size: 20,
+        ),
         onPressed: () => Navigator.of(context).maybePop(),
       ),
       title: const Text(
@@ -97,7 +92,7 @@ class _LeaderboardView extends StatelessWidget {
     );
   }
 
-  // ─── Error ────────────────────────────────────────────────────────
+  // Error
 
   Widget _buildErrorSliver(BuildContext context, String error) {
     return SliverFillRemaining(
@@ -107,8 +102,11 @@ class _LeaderboardView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded,
-                  color: Colors.redAccent, size: 48),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Colors.redAccent,
+                size: 48,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Failed to load leaderboard',
@@ -148,7 +146,7 @@ class _LeaderboardView extends StatelessWidget {
     );
   }
 
-  // ─── Empty ────────────────────────────────────────────────────────
+  // Empty
 
   Widget _buildEmptySliver() {
     return SliverFillRemaining(
@@ -156,8 +154,11 @@ class _LeaderboardView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.leaderboard_outlined,
-                color: Colors.white.withAlpha(80), size: 56),
+            Icon(
+              Icons.leaderboard_outlined,
+              color: Colors.white.withAlpha(80),
+              size: 56,
+            ),
             const SizedBox(height: 16),
             Text(
               'No leaderboard data yet',
@@ -173,29 +174,24 @@ class _LeaderboardView extends StatelessWidget {
     );
   }
 
-  // ─── List ─────────────────────────────────────────────────────────
+  // List
 
   Widget _buildListSliver(List<LeaderboardUserModel> users) {
     return SliverPadding(
       padding: const EdgeInsets.only(top: 8, bottom: 32),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final user = users[index];
-            final rank = index + 1;
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final user = users[index];
+          final rank = index + 1;
 
-            return _LeaderboardRow(user: user, rank: rank);
-          },
-          childCount: users.length,
-        ),
+          return _LeaderboardRow(user: user, rank: rank);
+        }, childCount: users.length),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Single leaderboard row — shows only rank (from position), name, and score
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _LeaderboardRow extends StatelessWidget {
   final LeaderboardUserModel user;
@@ -222,7 +218,7 @@ class _LeaderboardRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            // ── Rank (derived from backend ordering) ──
+            //Rank (derived from backend ordering)
             SizedBox(
               width: 36,
               child: Text(
@@ -237,7 +233,7 @@ class _LeaderboardRow extends StatelessWidget {
             ),
             const SizedBox(width: 14),
 
-            // ── Name (from API) ──
+            // Name from API
             Expanded(
               child: Text(
                 user.name,
@@ -250,7 +246,7 @@ class _LeaderboardRow extends StatelessWidget {
               ),
             ),
 
-            // ── Score (from API) ──
+            // Score from API
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(

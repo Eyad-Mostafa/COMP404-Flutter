@@ -1,0 +1,81 @@
+Feature: Authentication (Register / Login)
+ 1. Register Test Cases
+     TC-01: Register with valid data
+        Steps:
+           Open Sign Up screen
+           Enter valid name, email, password, confirm password
+           Click Sign Up
+        Expected Result:
+           User is registered successfully and success message is shown
+        Status: PASS
+     TC-02: Register with empty fields
+        Steps:
+           Leave all fields empty
+           Click Sign Up
+        Expected Result:
+           Validation errors appear under fields
+        Status: PASS
+     TC-03: Register with invalid email
+        Steps:
+           Enter invalid email (test)
+           Fill other fields correctly
+           Click Sign Up
+        Expected Result:
+           Email validation error appears
+        Status: PASS
+     TC-04: Register with weak password
+        Steps:
+            Enter password “123”
+            Click Sign Up
+        Expected Result:
+            Password validation error appears
+        Status: PASS
+     TC-05: Register with already existing email
+        Steps:
+            Enter email that already exists in system
+            Click Sign Up
+        Expected Result:
+             Error message returned from API (Email already exists)
+        Status: PASS
+2. Login Test Cases
+     TC-06: Login with valid credentials
+        Steps:
+            Enter correct email and password
+            Click Login
+        Expected Result:
+            User logs in successfully
+        Status: PASS
+     TC-07: Login with wrong password
+        Steps:
+            Enter valid email + wrong password
+            Click Login
+        Expected Result:
+            Error message appears
+        Status: PASS
+     TC-08: Login with unregistered email
+        Steps:
+            Enter email not in system
+            Click Login
+        Expected Result:
+            Error message from API
+        Status: PASS3. Edge Cases
+     TC-09: Network failure
+        Steps:
+            Turn off internet
+            Try login/register
+        Expected Result:
+            Error message shown (network error)
+        Status: PASS
+     TC-10: Password mismatch
+        Steps:
+            Enter password = "Aa123456"
+            Confirm password = "Aa123"
+        Expected Result:
+            "Passwords do not match" error appears
+        Status: PASS
+Notes
+     Validation handled in UI (client-side)
+     API validation handled by backend (server-side)
+     Errors handled via Cubit states (AuthError)
+     Success handled via AuthSuccessMessage
+
